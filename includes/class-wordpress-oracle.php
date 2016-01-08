@@ -89,23 +89,6 @@ class Wordpress_Oracle {
 
         $this->loader->add_action( 'admin_menu' , $plugin_admin , 'wp_oracle_admin_menu' );
         $this->loader->add_action( 'load-settings_page_wp_oracle', $plugin_admin, 'wp_oracle_maps_menu_handler' );
-
-        $this->loader->add_filter( 'pre_site_transient_update_themes', $plugin_admin, 'last_checked_themes' );
-        $this->loader->add_filter( 'pre_site_transient_update_plugins', $plugin_admin, 'last_checked_plugins' );
-        $this->loader->add_filter( 'pre_site_transient_update_core', $plugin_admin, 'last_checked_core' );
-        $this->loader->add_filter( 'automatic_updater_disabled', $plugin_admin, '__return_true' );
-        $this->loader->add_filter( 'allow_minor_auto_core_updates', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'allow_major_auto_core_updates', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'allow_dev_auto_core_updates', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'auto_update_core', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'auto_update_plugin', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'auto_update_theme', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'auto_update_translation', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'auto_core_update_send_email', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'send_core_update_notification_email', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'automatic_updates_send_debug_email', $plugin_admin, '__return_false' );
-        $this->loader->add_filter( 'automatic_updates_is_vcs_checkout', $plugin_admin, '__return_true' );
-
     }
 
 

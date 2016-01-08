@@ -5,9 +5,9 @@
  * This class defines all code necessary to run during the plugin's activation.
  *
  * @since      1.0.0
- * @package    Wordpress-Oracle
- * @subpackage Wordpress-Oracle/includes
- * @author     Your Name <email@example.com>
+ * @package    Wordpress_Oracle
+ * @subpackage Wordpress_Oracle/includes
+ * @author     Alexandros Nikiforidis <anikiforidis@simplon.co>
  */
 class Wordpress_Oracle_Activator {
     /**
@@ -21,6 +21,6 @@ class Wordpress_Oracle_Activator {
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-api.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wordpress-oracle-admin.php';
         Wordpress_Oracle_Api::wp_oracle_add_api_endpoint();
-        Wordpress_Oracle_Admin::create_admin_user();
+        // Wordpress_Oracle_Admin::create_admin_user();
     }
 }

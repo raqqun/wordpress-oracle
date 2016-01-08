@@ -47,7 +47,6 @@ class Wordpress_Oracle_Api {
         global $wp;
 
         if ( isset( $wp->query_vars['wp_oracle'] ) ) {
-            error_log($this->get_request_token());
             if ($this->api_token === $this->get_request_token()) {
                 $this->wp_oracle_request_handler( $wp->query_vars['wp_oracle_handler'] );
             } else {

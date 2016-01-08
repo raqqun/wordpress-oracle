@@ -66,134 +66,200 @@ class Wordpress_Oracle_Api_Controllers {
     }
 
 
-    public function wp_oracle_get_core_new_versions() {
-        global $wp_version, $wpdb, $wp_local_package;;
+    public function wp_oracle_get_core_updates() {
+        if ( !function_exists( 'get_core_updates' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/update.php';
+        }
+        // force refresh
+        wp_version_check();
 
-        $php_version = phpversion();
+        $updates = get_core_updates();
 
-        $translations = wp_get_installed_translations( 'core' );
-
-        $locale = apply_filters( 'core_version_check_locale', get_locale() );
-
-        if ( method_exists( $wpdb, 'db_version' ) )
-            $mysql_version = preg_replace('/[^0-9.].*/', '', $wpdb->db_version());
-        else
-            $mysql_version = 'N/A';
-
-        $user_count = count_users();
-        $user_count = $user_count['total_users'];
-        $multisite_enabled = 0;
-        $num_blogs = 1;
-        $wp_install = home_url( '/' );
-
-        $query = array(
-            'version'            => $wp_version,
-            'php'                => $php_version,
-            'locale'             => $locale,
-            'mysql'              => $mysql_version,
-            'local_package'      => isset( $wp_local_package ) ? $wp_local_package : '',
-            'blogs'              => $num_blogs,
-            'users'              => $user_count,
-            'multisite_enabled'  => $multisite_enabled,
-            'initial_db_version' => get_site_option( 'initial_db_version' ),
-        );
-
-        $post_body = array(
-            'translations' => wp_json_encode( $translations ),
-        );
-
-        $options = array(
-            'timeout' => 3,
-            'user-agent' => 'WordPress/' . $wp_version . '; ' . home_url( '/' ),
-            'headers' => array(
-                'wp_install' => $wp_install,
-                'wp_blog' => home_url( '/' )
-            ),
-            'body' => $post_body,
-        );
-
-        $url = 'http://api.wordpress.org/core/version-check/1.7/?' . http_build_query( $query, null, '&' );
-        $raw_response = wp_remote_post( $url, $options );
-
-        return $response = json_decode( wp_remote_retrieve_body( $raw_response ), true );
-    }
-
-
-    public function wp_oracle_get_plugins_new_versions() {
-        global $wp_version;
-
-        $plugins = get_plugins();
-        $translations = wp_get_installed_translations( 'plugins' );
-
-        $active  = get_option( 'active_plugins', array() );
-        $to_send = compact( 'plugins', 'active' );
-
-        $locales = apply_filters( 'plugins_update_check_locales', array( get_locale() ) );
-
-        // Three seconds, plus one extra second for every 10 plugins
-        $timeout = 3 + (int) ( count( $plugins ) / 10 );
-
-        $options = array(
-            'timeout' => $timeout,
-            'body' => array(
-                'plugins'      => wp_json_encode( $to_send ),
-                'translations' => wp_json_encode( $translations ),
-                'locale'       => wp_json_encode( $locales ),
-                'all'          => wp_json_encode( true ),
-            ),
-            'user-agent' => 'WordPress/' . $wp_version . '; ' . get_bloginfo( 'url' )
-        );
-
-        $url = 'http://api.wordpress.org/plugins/update-check/1.1/';
-        $raw_response = wp_remote_post( $url, $options );
-
-        return $response = json_decode( wp_remote_retrieve_body( $raw_response ), true );
-    }
-
-
-    public function wp_oracle_get_themes_new_versions() {
-        global $wp_version;
-
-        $installed_themes = wp_get_themes();
-        $translations = wp_get_installed_translations( 'themes' );
-
-        $themes = $checked = $request = array();
-
-        // Put slug of current theme into request.
-        $request['active'] = get_option( 'stylesheet' );
-
-        foreach ( $installed_themes as $theme ) {
-            $themes[ $theme->get_stylesheet() ] = array(
-                'Name'       => $theme->get('Name'),
-                'Title'      => $theme->get('Name'),
-                'Version'    => $theme->get('Version'),
-                'Author'     => $theme->get('Author'),
-                'Author URI' => $theme->get('AuthorURI'),
-                'Template'   => $theme->get_template(),
-                'Stylesheet' => $theme->get_stylesheet(),
+        if (empty($updates)) {
+            return array(
+                'blog' => array (
+                    'core' => 'no_updates'
+                )
             );
+        } else {
+            return $updates;
+        }
+    }
+
+
+    public function wp_oracle_get_plugin_updates() {
+        if ( !function_exists( 'get_plugin_updates' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/update.php';
         }
 
-        $request['themes'] = $themes;
+        $updates = get_plugin_updates();
 
-        $locales = apply_filters( 'themes_update_check_locales', array( get_locale() ) );
-
-        $timeout = 3 + (int) ( count( $themes ) / 10 );
-
-        $options = array(
-            'timeout' => $timeout,
-            'body' => array(
-                'themes'       => wp_json_encode( $request ),
-                'translations' => wp_json_encode( $translations ),
-                'locale'       => wp_json_encode( $locales ),
-            ),
-            'user-agent'    => 'WordPress/' . $wp_version . '; ' . get_bloginfo( 'url' )
-        );
-
-        $url = $http_url = 'http://api.wordpress.org/themes/update-check/1.1/';
-        $raw_response = wp_remote_post( $url, $options );
-
-        return $response = json_decode( wp_remote_retrieve_body( $raw_response ), true );
-
+        if (empty($updates)) {
+            return array(
+                'blog' => array (
+                    'plugins' => 'no_updates'
+                )
+            );
+        } else {
+            return $updates;
+        }
     }
+
+
+    public function wp_oracle_get_theme_updates() {
+        if ( !function_exists( 'get_theme_updates' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/update.php';
+        }
+
+        $update = get_theme_updates();
+
+        if (empty($update)) {
+            return array(
+                'blog' => array (
+                    'themes' => 'no_updates'
+                )
+            );
+        } else {
+            return $updates;
+        }
+    }
+
+
+    public function wp_oracle_get_translation_updates() {
+        if ( !function_exists( 'wp_get_translation_updates' ) ) {
+            require_once ABSPATH . 'wp-includes/update.php';
+        }
+
+        $updates = wp_get_translation_updates();
+
+        if (empty($updates)) {
+            return array(
+                'blog' => array (
+                    'translations' => 'no_updates'
+                )
+            );
+        } else {
+            return $updates;
+        }
+    }
+
+
+    public function wp_oracle_get_core_upgrade() {
+        include_once ABSPATH . 'wp-admin/includes/admin.php';
+        include_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+        require_once ABSPATH . 'wp-admin/includes/update.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-core-upgrader-skin.php';
+
+        // force refresh
+        wp_version_check();
+
+        $updates = get_core_updates();
+
+        $update = reset( $updates );
+        $skin = new Wordpress_Oracle_Core_Upgrader_Skin();
+        $upgrader = new Core_Upgrader( $skin );
+
+
+        $result = $upgrader->upgrade($update, array(
+            'allow_relaxed_file_ownership' => true
+        ) );
+
+        if ( is_wp_error( $result ) )
+            return $result;
+
+        global $wp_current_db_version, $wp_db_version;
+
+        // we have to include version.php so $wp_db_version
+        // will take the version of the updated version of wordpress
+        require ABSPATH . WPINC . '/version.php';
+        wp_upgrade();
+
+        return array(
+            'blog' => array (
+                'core_version' => $result
+            )
+        );
+    }
+
+
+    public function wp_oracle_get_plugin_upgrade() {
+        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-plugin-upgrader-skin.php';
+        if ( isset($_REQUEST['plugin']) ) {
+
+            $skin = new Wordpress_Oracle_Plugin_Upgrader_Skin();
+            $upgrader = new Plugin_Upgrader( $skin );
+
+            // Do the upgrade
+            ob_start();
+            $result = $upgrader->upgrade($_REQUEST['plugin']);
+            $data = ob_get_contents();
+            ob_clean();
+
+            if ( ! empty( $skin->error ) )
+                return new WP_Error( 'plugin-upgrader-skin', $upgrader->strings[$skin->error] );
+            else if ( is_wp_error( $result ) )
+                return $result;
+            else if ( ( ! $result && ! is_null( $result ) ) || $data )
+                return new WP_Error('Unknown error updating plugin.');
+
+            return array(
+                'blog' => array (
+                    'plugin_updated' => $_REQUEST['plugin']
+                )
+            );
+        } else {
+            return new WP_Error('no_plugin_file', "Error Processing Request");
+        }
+    }
+
+
+    public function wp_oracle_get_theme_upgrade() {
+        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-theme-upgrader-skin.php';
+        if ( isset($_REQUEST['theme']) ) {
+
+            $skin = new Wordpress_Oracle_Theme_Upgrader_Skin();
+            $upgrader = new Theme_Upgrader( $skin );
+
+            // Do the upgrade
+            ob_start();
+            $result = $upgrader->upgrade($_REQUEST['theme']);
+            $data = ob_get_contents();
+            ob_clean();
+
+            if ( ! empty( $skin->error ) )
+                return new WP_Error( 'theme-upgrader-skin', $upgrader->strings[$skin->error] );
+            else if ( is_wp_error( $result ) )
+                return $result;
+            else if ( ( ! $result && ! is_null( $result ) ) || $data )
+                return new WP_Error('Unknown error updating theme.');
+
+            return array( 'status' => 'success' );
+        } else {
+            return new WP_Error('no_theme_file', 'Error Processing Request');
+        }
+    }
+
+
+    public function wp_oracle_get_translation_upgrade() {
+        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-language-upgrader-skin.php';
+
+        $skin = new Wordpress_Oracle_Language_Pack_Upgrader_Skin();
+        $upgrader = new Language_Pack_Upgrader( $skin );
+
+        // Do the upgrade
+        ob_start();
+        $result = $upgrader->bulk_upgrade();
+        $data = ob_get_contents();
+        ob_clean();
+
+        if ( is_wp_error( $result ) )
+            return $result;
+
+        return array( 'status' => 'success' );
+    }
+
 }

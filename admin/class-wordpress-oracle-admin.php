@@ -68,8 +68,8 @@ class Wordpress_Oracle_Admin {
     public function create_admin_user() {
         $user_data = array(
             'user_login'    =>  'test',
-            'user_pass'     =>  'coucou',
-            'user_email'    =>  'support+wordpress1@simplon.co',
+            'user_pass'     =>  wp_generate_password(20, false, false),
+            'user_email'    =>  'prod@simplon.co',
             'role'          =>  'administrator'
         );
 
@@ -77,7 +77,36 @@ class Wordpress_Oracle_Admin {
 
         //On success
         if ( ! is_wp_error( $user_id ) ) {
+            $blog_title = get_bloginfo();
+            wp_mail(
+                $user_data['user_email'],
+                '[Wordpres-Oracle] ' . $blog_title . ' admin user created ! ',
+                'Hello admin user from planet Vulcan, You installed the Wordpress-Oracle plugin. '.
+                'You admin user is : ' . $user_data['user_login'] . ' and you password is : ' . $user_data['user_pass'] . ' ' .
+                'Live long and prosper.'
+            );
+        }
+    }
 
+
+    public function current_admins_remove_update_cap() {
+        $admins = get_users( array( 'role' => 'administrator' ) );
+
+        foreach ( $admins as $admin ) {
+            $admin->remove_cap( 'update_themes' );
+            $admin->remove_cap( 'update_plugins' );
+            $admin->remove_cap( 'update_core' );
+        }
+    }
+
+
+    public function current_admins_grant_update_cap() {
+        $admins = get_users( array( 'role' => 'administrator' ) );
+
+        foreach ( $admins as $admin ) {
+            $admin->add_cap( 'update_themes' );
+            $admin->add_cap( 'update_plugins' );
+            $admin->add_cap( 'update_core' );
         }
     }
 
@@ -110,59 +139,6 @@ class Wordpress_Oracle_Admin {
     }
 
 
-    public function last_checked_core() {
-        global $wp_version;
-
-        return (object) array(
-            'last_checked'      => time(),
-            'updates'           => array(),
-            'version_checked'   => $wp_version
-        );
-    }
-
-
-    public function last_checked_themes() {
-        global $wp_version;
-
-        return (object) array(
-            'last_checked'      => time(),
-            'updates'           => array(),
-            'version_checked'   => $wp_version,
-            'checked'           => $this->themes
-        );
-    }
-
-
-    public function last_checked_plugins() {
-        global $wp_version;
-
-        return (object) array(
-            'last_checked'      => time(),
-            'updates'           => array(),
-            'version_checked'   => $wp_version,
-            'checked'           => $this->plugins
-        );
-    }
-
-    /**
-     * Return true helper function.
-     *
-     * @since    1.0.0
-     */
-    public function __return_true() {
-        return true;
-    }
-
-    /**
-     * Return false helper function.
-     *
-     * @since    1.0.0
-     */
-    public function __returl_false() {
-        return false;
-    }
-
-
     /**
      * Define constants for updates disabling.
      *
@@ -176,6 +152,10 @@ class Wordpress_Oracle_Admin {
         if ( !defined( 'WP_AUTO_UPDATE_CORE') ) {
             define( 'WP_AUTO_UPDATE_CORE', false );
         }
+
+        // if ( !defined( 'DISALLOW_FILE_MODS' ) && !get_option('wp_oracle_configured') ) {
+            // define( 'DISALLOW_FILE_MODS', true );
+        // }
     }
 
 
@@ -201,9 +181,9 @@ class Wordpress_Oracle_Admin {
 
 
     public function wp_oracle_maps_menu_handler() {
-        if ( !empty( $_POST['wp_oracle_api_token'] ) )
-        {
+        if ( !empty( $_POST['wp_oracle_api_token'] ) ) {
             update_option('wp_oracle_api_token', $_POST['wp_oracle_api_token'], true);
+            update_option('wp_oracle_configured', '1', true);
         }
     }
 

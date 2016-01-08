@@ -20,7 +20,7 @@
 
 
 <?php $disabled = (get_option('wp_oracle_api_token') !== FALSE) ? 'disabled' : '' ?>
-<?php $api_token = (get_option('wp_oracle_api_token') !== FALSE) ? get_option('wp_oracle_api_token') : wp_generate_password(20, false, false); ?>
+<?php $api_token = (get_option('wp_oracle_api_token') !== FALSE) ? get_option('wp_oracle_api_token') : generate_api_key(); ?>
 <form id='wp_oracle_form' method='POST' action=''>
     <table class='form-table'>
         <tr>
@@ -28,7 +28,7 @@
                 <label for='wp_oracle_api_token'>Wordpress Oracle api token</label>
             </th>
             <td>
-                <input style="width: 200px" id='wp_oracle_api_token' <?php echo $disabled ?> type='text' name='wp_oracle_api_token' value='<?php echo $api_token ?>' placeholder='Wordpress Oracle Api-Token' />
+                <input style="width: 300px" id='wp_oracle_api_token' <?php echo $disabled ?> type='text' name='wp_oracle_api_token' value='<?php echo $api_token ?>' placeholder='Wordpress Oracle Api-Token' />
                 <p class="description">Wordpress Oracle Api-Token. Use this this with an Api-Token header</p>
             </td>
         </tr>

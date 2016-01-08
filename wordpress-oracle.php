@@ -39,7 +39,7 @@ function wp_oracle_admin_notices() { ?>
 <div class='error'>
     <p>
         <?php echo 'Wordpress Oracle Plugin is not configured : '; ?>
-        <a href="">Configuration Page</a>
+        <a href="options-general.php?page=wp_oracle">Configuration Page</a>
     </p>
 </div>
 <?php }
@@ -67,6 +67,18 @@ register_activation_hook( __FILE__, 'activate_wordpress_oracle' );
 register_deactivation_hook( __FILE__, 'deactivate_wordpress_oracle' );
 
 
+
+function generate_api_key() {
+    return sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ),
+        mt_rand( 0, 0xffff ),
+        mt_rand( 0, 0x0fff ) | 0x4000,
+        mt_rand( 0, 0x3fff ) | 0x8000,
+        mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
+    );
+}
+
+
 /**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
@@ -83,10 +95,10 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-wordpress-oracle.php';
  *
  * @since    1.0.0
  */
-function run_plugin_name() {
+function run_wordpress_oracle() {
     $plugin = new Wordpress_Oracle();
     $plugin->run();
 }
 
 
-run_plugin_name();
+run_wordpress_oracle();
