@@ -48,10 +48,11 @@ class Wordpress_Oracle_Api_Controllers {
     public function wp_oracle_get_themes() {
         $themes_objects = wp_get_themes();
         $themes = array();
-        foreach ($themes_objects as $theme) {
+        foreach ($themes_objects as $slug => $theme) {
             array_push(
                 $themes,
                 array(
+                    'slug'      => $slug,
                     'name'      => $theme->get('Name'),
                     'version'   => $theme->get('Version')
                 )
@@ -70,6 +71,7 @@ class Wordpress_Oracle_Api_Controllers {
         if ( !function_exists( 'get_core_updates' ) ) {
             require_once ABSPATH . 'wp-admin/includes/update.php';
         }
+
         // force refresh
         wp_version_check();
 
@@ -92,6 +94,9 @@ class Wordpress_Oracle_Api_Controllers {
             require_once ABSPATH . 'wp-admin/includes/update.php';
         }
 
+        // force refresh
+        wp_update_plugins();
+
         $updates = get_plugin_updates();
 
         if (empty($updates)) {
@@ -111,9 +116,12 @@ class Wordpress_Oracle_Api_Controllers {
             require_once ABSPATH . 'wp-admin/includes/update.php';
         }
 
-        $update = get_theme_updates();
+        // force refresh
+        wp_update_themes();
 
-        if (empty($update)) {
+        $updates = get_theme_updates();
+
+        if (empty($updates)) {
             return array(
                 'blog' => array (
                     'themes' => 'no_updates'
@@ -184,6 +192,7 @@ class Wordpress_Oracle_Api_Controllers {
 
 
     public function wp_oracle_get_plugin_upgrade() {
+        include_once ABSPATH . 'wp-admin/includes/admin.php';
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-plugin-upgrader-skin.php';
         if ( isset($_REQUEST['plugin']) ) {
@@ -198,7 +207,7 @@ class Wordpress_Oracle_Api_Controllers {
             ob_clean();
 
             if ( ! empty( $skin->error ) )
-                return new WP_Error( 'plugin-upgrader-skin', $upgrader->strings[$skin->error] );
+                return new WP_Error( 'plugin_upgrader_skin', $upgrader->strings[$skin->error] );
             else if ( is_wp_error( $result ) )
                 return $result;
             else if ( ( ! $result && ! is_null( $result ) ) || $data )
@@ -210,12 +219,13 @@ class Wordpress_Oracle_Api_Controllers {
                 )
             );
         } else {
-            return new WP_Error('no_plugin_file', "Error Processing Request");
+            return new WP_Error('no_plugin_file', "Please specify plugin name.");
         }
     }
 
 
     public function wp_oracle_get_theme_upgrade() {
+        include_once ABSPATH . 'wp-admin/includes/admin.php';
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-theme-upgrader-skin.php';
         if ( isset($_REQUEST['theme']) ) {
@@ -230,20 +240,25 @@ class Wordpress_Oracle_Api_Controllers {
             ob_clean();
 
             if ( ! empty( $skin->error ) )
-                return new WP_Error( 'theme-upgrader-skin', $upgrader->strings[$skin->error] );
+                return new WP_Error( 'theme_upgrader_skin', $upgrader->strings[$skin->error] );
             else if ( is_wp_error( $result ) )
                 return $result;
             else if ( ( ! $result && ! is_null( $result ) ) || $data )
-                return new WP_Error('Unknown error updating theme.');
+                return new WP_Error('unknown_error', 'Unknown error updating theme.');
 
-            return array( 'status' => 'success' );
+            return array(
+                'blog' => array (
+                    'theme_updated' => $_REQUEST['theme']
+                )
+            );
         } else {
-            return new WP_Error('no_theme_file', 'Error Processing Request');
+            return new WP_Error('no_theme_file', 'Please specify theme name.');
         }
     }
 
 
     public function wp_oracle_get_translation_upgrade() {
+        include_once ABSPATH . 'wp-admin/includes/admin.php';
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wordpress-oracle-language-upgrader-skin.php';
 
